@@ -3,125 +3,242 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Donniya Privacy Policy</title>
-  <meta name="description" content="Privacy Policy for the Donniya mobile application by A-Recreations.">
+  <title>Donniya Privacy Policy / Politique de confidentialité</title>
+  <meta name="description" content="Donniya privacy policy in English and French.">
   <style>
-    :root {
-      color-scheme: light;
-      --bg: #f7f5ef;
-      --card: #ffffff;
-      --text: #1f2933;
-      --muted: #667085;
-      --accent: #6f4e37;
-      --border: #e6e0d6;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      line-height: 1.65;
-    }
-    main {
-      width: min(920px, calc(100% - 32px));
-      margin: 32px auto;
-      padding: 34px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      box-shadow: 0 14px 40px rgba(31, 41, 51, 0.08);
-    }
-    .page-title {
-      margin: 0 0 8px;
-      text-align: center;
-      color: var(--accent);
-      font-size: clamp(2rem, 5vw, 3rem);
-      line-height: 1.1;
-    }
-    .updated {
-      text-align: center;
-      color: var(--muted);
-      margin-top: 0;
-      font-style: italic;
-    }
-    .toc {
-      margin: 28px 0;
-      padding: 20px;
-      background: #fbfaf7;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-    }
-    .toc h2 {
-      margin-top: 0;
-      font-size: 1.1rem;
-      color: var(--accent);
-    }
-    .toc ol {
-      margin: 0;
-      padding-left: 22px;
-    }
-    a {
-      color: var(--accent);
-      text-decoration-thickness: 1px;
-      text-underline-offset: 3px;
-    }
-    h2 {
-      margin-top: 34px;
-      padding-top: 10px;
-      border-top: 1px solid var(--border);
-      color: var(--accent);
-      font-size: 1.35rem;
-    }
-    h3 {
-      margin-top: 22px;
-      font-size: 1.05rem;
-    }
-    p, li {
-      font-size: 1rem;
-    }
-    footer {
-      margin-top: 38px;
-      padding-top: 18px;
-      border-top: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 0.95rem;
-      text-align: center;
-    }
-    @media (max-width: 640px) {
-      main {
-        width: min(100% - 18px, 920px);
-        margin: 9px auto;
-        padding: 22px;
-        border-radius: 16px;
-      }
-    }
-  </style>
+:root {
+  color-scheme: light;
+  --bg: #f7f7fb;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #2563eb;
+  --accent-soft: #eff6ff;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  line-height: 1.65;
+  background: var(--bg);
+  color: var(--text);
+}
+.wrapper { max-width: 980px; margin: 32px auto; padding: 0 16px; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+  padding: 32px;
+  margin-bottom: 24px;
+}
+.lang-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(247, 247, 251, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.lang-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.lang-inner a, .top-link {
+  display: inline-block;
+  text-decoration: none;
+  color: var(--accent);
+  border: 1px solid #bfdbfe;
+  background: var(--accent-soft);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+h1 {
+  margin: 0 0 6px;
+  text-align: center;
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.1;
+}
+.updated { text-align: center; color: var(--muted); margin: 0 0 26px; font-style: italic; }
+h2 {
+  margin-top: 32px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+h3 { margin-top: 20px; font-size: 1.05rem; color: #374151; }
+p { margin: 0 0 14px; }
+ul { margin: 0 0 16px 1.2rem; padding: 0; }
+li { margin-bottom: 6px; }
+.notice {
+  color: var(--muted);
+  text-align: center;
+  max-width: 780px;
+  margin: 0 auto 18px;
+}
+footer { text-align: center; color: var(--muted); margin: 24px 0 40px; font-size: 0.95rem; }
+@media (max-width: 640px) {
+  .wrapper { margin: 16px auto; padding: 0 12px; }
+  .card { padding: 22px; border-radius: 14px; }
+  h1 { font-size: 2rem; }
+}
+</style>
 </head>
 <body>
-  <main>
-    <h1 class='page-title'>Privacy Policy</h1><p class='updated'>Last updated: May 01, 2026</p>
-    <section class="toc" aria-label="Table of contents">
-      <h2>Table of Contents</h2>
-      <ol>
-        <li><a href='#1-information-we-collect'>1. Information We Collect</a></li>
-<li><a href='#2-how-we-use-information'>2. How We Use Information</a></li>
-<li><a href='#3-legal-bases-for-processing'>3. Legal Bases for Processing</a></li>
-<li><a href='#4-sharing-of-information'>4. Sharing of Information</a></li>
-<li><a href='#5-third-party-services-links-and-advertising'>5. Third-Party Services, Links, and Advertising</a></li>
-<li><a href='#6-google-api-services'>6. Google API Services</a></li>
-<li><a href='#7-data-retention'>7. Data Retention</a></li>
-<li><a href='#8-security'>8. Security</a></li>
-<li><a href='#9-your-privacy-rights'>9. Your Privacy Rights</a></li>
-<li><a href='#10-do-not-track-signals'>10. Do-Not-Track Signals</a></li>
-<li><a href='#11-updates-to-this-privacy-policy'>11. Updates to This Privacy Policy</a></li>
-<li><a href='#12-contact-us'>12. Contact Us</a></li>
-      </ol>
+  <nav class="lang-bar" aria-label="Language selection">
+    <div class="lang-inner">
+      <a href="#english">English</a>
+      <a href="#francais">Français</a>
+      <a href="en/">English only</a>
+      <a href="fr/">Français seulement</a>
+    </div>
+  </nav>
+  <main class="wrapper">
+    <p class="notice">This page contains the Donniya privacy policy in English and French. / Cette page contient la politique de confidentialité de Donniya en anglais et en français.</p>
+    <section id="english" class="card" lang="en">
+      <h1>Privacy Policy</h1>
+<p class="updated">Last updated: May 01, 2026</p>
+<p>This Privacy Policy explains how A-Recreations (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) collects, uses, stores, and shares information when you use Donniya or any related service that links to this policy.</p>
+<p>By using Donniya, you agree to the practices described in this Privacy Policy. If you do not agree, please do not use the app.</p>
+<h2>1. Information We Collect</h2>
+<h3>1.1 Information You Provide</h3>
+<p>We may collect information that you voluntarily provide when you contact us, request support, send feedback, participate in surveys, or interact with us about Donniya. This may include your name, email address, message content, and any information you choose to share.</p>
+<p>If you make a purchase, payment information is processed by the relevant app store or payment provider. We do not store full debit card, credit card, bank account, or mobile-money account details.</p>
+<h3>1.2 App Permissions</h3>
+<p>Depending on the features you use, Donniya may request permission to send push notifications or access reminder-related features on your device. You can change these permissions at any time in your device settings.</p>
+<h3>1.3 Information Collected Automatically</h3>
+<p>When you use Donniya, certain technical and usage information may be collected automatically to help us operate, secure, analyze, and improve the app. This may include device type, operating system, app version, language settings, country or approximate location, IP address, crash reports, performance data, pages or features viewed, and the date and time of app activity.</p>
+<p>We do not collect precise GPS location unless a specific feature clearly requests it and you grant permission.</p>
+<h3>1.4 Sensitive Information</h3>
+<p>We do not intentionally collect or process sensitive personal information such as racial or ethnic origin, religious beliefs, health information, biometric data, or sexual orientation.</p>
+<h3>1.5 Children’s Privacy</h3>
+<p>Donniya is intended for general language-learning and educational use. We do not knowingly collect personal information from children where parental consent is required by law. If you believe a child has provided us with personal information, please contact us so we can review and delete it where appropriate.</p>
+<h2>2. How We Use Information</h2>
+<p>We use information only for legitimate purposes related to Donniya, including to:</p>
+<ul>
+<li>Provide, maintain, and improve the app;</li>
+<li>Analyze usage trends and understand which features are helpful;</li>
+<li>Detect, prevent, and fix technical problems, crashes, fraud, or security issues;</li>
+<li>Send app notifications when you have allowed them;</li>
+<li>Respond to support requests, questions, and feedback;</li>
+<li>Manage purchases, premium access, advertising, and app functionality;</li>
+<li>Comply with legal obligations and enforce our rights when necessary.</li>
+</ul>
+<h2>3. Legal Bases for Processing</h2>
+<p>Where applicable law requires a legal basis, we process personal information based on one or more of the following:</p>
+<ul>
+<li>Your consent, for example when you allow notifications or grant device permissions;</li>
+<li>Our legitimate interests, such as improving Donniya, securing the app, and understanding usage trends;</li>
+<li>Contractual necessity, when processing is needed to provide app features or purchases;</li>
+<li>Legal obligations, when we must comply with applicable laws or lawful requests;</li>
+<li>Vital interests, where processing is necessary to protect someone’s safety.</li>
+</ul>
+<h2>4. Sharing of Information</h2>
+<p>We do not sell your personal information. We may share limited information with trusted service providers who help us operate Donniya, including providers for analytics, crash reporting, advertising, hosting, payment processing, notifications, and customer support.</p>
+<p>These providers may process information only as needed to provide their services to us and must protect the information according to their own privacy and security obligations.</p>
+<p>We may also share information if required by law, to protect our rights, to prevent fraud or security issues, or in connection with a business transfer such as a merger, acquisition, or sale of assets.</p>
+<h2>5. Third-Party Services, Links, and Advertising</h2>
+<p>Donniya may contain links, advertisements, or integrations from third-party services. Third parties may collect or process information according to their own privacy policies. We are not responsible for the privacy practices, content, or security of third-party websites, apps, or services.</p>
+<p>Advertising and analytics partners may use cookies, identifiers, pixels, SDKs, or similar technologies to measure app performance, show ads, prevent abuse, and understand how users interact with the app.</p>
+<h2>6. Google API Services</h2>
+<p>If Donniya uses information received from Google APIs, our use of that information will comply with the Google API Services User Data Policy, including the Limited Use requirements.</p>
+<h2>7. Data Retention</h2>
+<p>We keep personal information only for as long as necessary for the purposes described in this Privacy Policy, unless a longer retention period is required or permitted by law.</p>
+<p>When we no longer need personal information, we will delete it, anonymize it, or securely store it until deletion is possible.</p>
+<h2>8. Security</h2>
+<p>We use reasonable technical and organizational measures to protect information. However, no method of electronic transmission or storage is completely secure, and we cannot guarantee absolute security.</p>
+<h2>9. Your Privacy Rights</h2>
+<p>Depending on your location and applicable law, you may have the right to request access to, correction of, deletion of, or a copy of your personal information. You may also have the right to withdraw consent or object to certain processing.</p>
+<p>To exercise your rights, contact us using the details below. We may need to verify your identity before responding to your request.</p>
+<h2>10. Do-Not-Track Signals</h2>
+<p>Some browsers and mobile systems offer Do-Not-Track signals. Because there is no consistent industry standard for responding to these signals, we do not currently respond to them.</p>
+<h2>11. Updates to This Privacy Policy</h2>
+<p class="updated">We may update this Privacy Policy from time to time. The updated version will be indicated by a revised date at the top of the policy. We encourage you to review this page periodically.</p>
+<h2>12. Contact Us</h2>
+<p>If you have questions or comments about this Privacy Policy, you can contact us at:</p>
+<p>A-Recreations</p>
+<p>Sebeninkoro près de la MINUSMA</p>
+<p>Bamako, Mali</p>
+<p>Email: arecreations@donniya.in</p>
+      <p><a class="top-link" href="#top">Back to top</a></p>
     </section>
-    <p>This Privacy Policy explains how A-Recreations (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) collects, uses, stores, and shares information when you use Donniya or any related service that links to this policy.</p><p>By using Donniya, you agree to the practices described in this Privacy Policy. If you do not agree, please do not use the app.</p><h2 id='1-information-we-collect'>1. Information We Collect</h2><h3>1.1 Information You Provide</h3><p>We may collect information that you voluntarily provide when you contact us, request support, send feedback, participate in surveys, or interact with us about Donniya. This may include your name, email address, message content, and any information you choose to share.</p><p>If you make a purchase, payment information is processed by the relevant app store or payment provider. We do not store full debit card, credit card, bank account, or mobile-money account details.</p><h3>1.2 App Permissions</h3><p>Depending on the features you use, Donniya may request permission to send push notifications or access reminder-related features on your device. You can change these permissions at any time in your device settings.</p><h3>1.3 Information Collected Automatically</h3><p>When you use Donniya, certain technical and usage information may be collected automatically to help us operate, secure, analyze, and improve the app. This may include device type, operating system, app version, language settings, country or approximate location, IP address, crash reports, performance data, pages or features viewed, and the date and time of app activity.</p><p>We do not collect precise GPS location unless a specific feature clearly requests it and you grant permission.</p><h3>1.4 Sensitive Information</h3><p>We do not intentionally collect or process sensitive personal information such as racial or ethnic origin, religious beliefs, health information, biometric data, or sexual orientation.</p><h3>1.5 Children’s Privacy</h3><p>Donniya is intended for general language-learning and educational use. We do not knowingly collect personal information from children where parental consent is required by law. If you believe a child has provided us with personal information, please contact us so we can review and delete it where appropriate.</p><h2 id='2-how-we-use-information'>2. How We Use Information</h2><p>We use information only for legitimate purposes related to Donniya, including to:</p><ul><li>Provide, maintain, and improve the app;</li><li>Analyze usage trends and understand which features are helpful;</li><li>Detect, prevent, and fix technical problems, crashes, fraud, or security issues;</li><li>Send app notifications when you have allowed them;</li><li>Respond to support requests, questions, and feedback;</li><li>Manage purchases, premium access, advertising, and app functionality;</li><li>Comply with legal obligations and enforce our rights when necessary.</li></ul><h2 id='3-legal-bases-for-processing'>3. Legal Bases for Processing</h2><p>Where applicable law requires a legal basis, we process personal information based on one or more of the following:</p><ul><li>Your consent, for example when you allow notifications or grant device permissions;</li><li>Our legitimate interests, such as improving Donniya, securing the app, and understanding usage trends;</li><li>Contractual necessity, when processing is needed to provide app features or purchases;</li><li>Legal obligations, when we must comply with applicable laws or lawful requests;</li><li>Vital interests, where processing is necessary to protect someone’s safety.</li></ul><h2 id='4-sharing-of-information'>4. Sharing of Information</h2><p>We do not sell your personal information. We may share limited information with trusted service providers who help us operate Donniya, including providers for analytics, crash reporting, advertising, hosting, payment processing, notifications, and customer support.</p><p>These providers may process information only as needed to provide their services to us and must protect the information according to their own privacy and security obligations.</p><p>We may also share information if required by law, to protect our rights, to prevent fraud or security issues, or in connection with a business transfer such as a merger, acquisition, or sale of assets.</p><h2 id='5-third-party-services-links-and-advertising'>5. Third-Party Services, Links, and Advertising</h2><p>Donniya may contain links, advertisements, or integrations from third-party services. Third parties may collect or process information according to their own privacy policies. We are not responsible for the privacy practices, content, or security of third-party websites, apps, or services.</p><p>Advertising and analytics partners may use cookies, identifiers, pixels, SDKs, or similar technologies to measure app performance, show ads, prevent abuse, and understand how users interact with the app.</p><h2 id='6-google-api-services'>6. Google API Services</h2><p>If Donniya uses information received from Google APIs, our use of that information will comply with the Google API Services User Data Policy, including the Limited Use requirements.</p><h2 id='7-data-retention'>7. Data Retention</h2><p>We keep personal information only for as long as necessary for the purposes described in this Privacy Policy, unless a longer retention period is required or permitted by law.</p><p>When we no longer need personal information, we will delete it, anonymize it, or securely store it until deletion is possible.</p><h2 id='8-security'>8. Security</h2><p>We use reasonable technical and organizational measures to protect information. However, no method of electronic transmission or storage is completely secure, and we cannot guarantee absolute security.</p><h2 id='9-your-privacy-rights'>9. Your Privacy Rights</h2><p>Depending on your location and applicable law, you may have the right to request access to, correction of, deletion of, or a copy of your personal information. You may also have the right to withdraw consent or object to certain processing.</p><p>To exercise your rights, contact us using the details below. We may need to verify your identity before responding to your request.</p><h2 id='10-do-not-track-signals'>10. Do-Not-Track Signals</h2><p>Some browsers and mobile systems offer Do-Not-Track signals. Because there is no consistent industry standard for responding to these signals, we do not currently respond to them.</p><h2 id='11-updates-to-this-privacy-policy'>11. Updates to This Privacy Policy</h2><p>We may update this Privacy Policy from time to time. The updated version will be indicated by a revised date at the top of the policy. We encourage you to review this page periodically.</p><h2 id='12-contact-us'>12. Contact Us</h2><p>If you have questions or comments about this Privacy Policy, you can contact us at:</p><p>A-Recreations<br>Sebeninkoro près de la MINUSMA<br>Bamako, Mali<br>Email: arecreations@donniya.in</p>
-    <footer>
-      © 2026 A-Recreations. Donniya Privacy Policy.
-    </footer>
+    <section id="francais" class="card" lang="fr">
+      <h1>Politique de confidentialité</h1>
+<p class="updated">Dernière mise à jour : 01 mai 2026</p>
+<p>La présente Politique de confidentialité explique comment A-Recreations (« nous », « notre » ou « nos ») collecte, utilise, conserve et partage certaines informations lorsque vous utilisez Donniya ou tout service associé qui renvoie vers cette politique.</p>
+<p>En utilisant Donniya, vous acceptez les pratiques décrites dans cette Politique de confidentialité. Si vous n’êtes pas d’accord avec cette politique, veuillez ne pas utiliser l’application.</p>
+<h2>1. Informations que nous collectons</h2>
+<h3>1.1 Informations que vous fournissez</h3>
+<p>Nous pouvons collecter les informations que vous nous fournissez volontairement lorsque vous nous contactez, demandez de l’assistance, envoyez un retour, participez à des enquêtes ou échangez avec nous au sujet de Donniya. Cela peut inclure votre nom, votre adresse e-mail, le contenu de votre message et toute autre information que vous choisissez de partager.</p>
+<p>Si vous effectuez un achat, les informations de paiement sont traitées par la boutique d’applications ou le prestataire de paiement concerné. Nous ne conservons pas les numéros complets de carte de débit, de carte de crédit, de compte bancaire ou de compte Mobile Money.</p>
+<h3>1.2 Autorisations de l’application</h3>
+<p>Selon les fonctionnalités que vous utilisez, Donniya peut demander l’autorisation d’envoyer des notifications push ou d’accéder à des fonctionnalités liées aux rappels sur votre appareil. Vous pouvez modifier ces autorisations à tout moment dans les paramètres de votre appareil.</p>
+<h3>1.3 Informations collectées automatiquement</h3>
+<p>Lorsque vous utilisez Donniya, certaines informations techniques et d’utilisation peuvent être collectées automatiquement afin de nous aider à faire fonctionner, sécuriser, analyser et améliorer l’application. Cela peut inclure le type d’appareil, le système d’exploitation, la version de l’application, les paramètres de langue, le pays ou la localisation approximative, l’adresse IP, les rapports de plantage, les données de performance, les pages ou fonctionnalités consultées ainsi que la date et l’heure de l’activité dans l’application.</p>
+<p>Nous ne collectons pas de localisation GPS précise sauf si une fonctionnalité spécifique le demande clairement et que vous accordez cette autorisation.</p>
+<h3>1.4 Informations sensibles</h3>
+<p>Nous ne collectons ni ne traitons intentionnellement des informations personnelles sensibles telles que l’origine raciale ou ethnique, les croyances religieuses, les informations de santé, les données biométriques ou l’orientation sexuelle.</p>
+<h3>1.5 Confidentialité des enfants</h3>
+<p>Donniya est destinée à un usage général d’apprentissage des langues et d’éducation. Nous ne collectons pas sciemment d’informations personnelles auprès d’enfants lorsque le consentement parental est requis par la loi. Si vous pensez qu’un enfant nous a fourni des informations personnelles, veuillez nous contacter afin que nous puissions les examiner et les supprimer lorsque cela est approprié.</p>
+<h2>2. Comment nous utilisons les informations</h2>
+<p>Nous utilisons les informations uniquement à des fins légitimes liées à Donniya, notamment pour :</p>
+<ul>
+<li>Fournir, maintenir et améliorer l’application ;</li>
+<li>Analyser les tendances d’utilisation et comprendre quelles fonctionnalités sont utiles ;</li>
+<li>Détecter, prévenir et corriger les problèmes techniques, les plantages, la fraude ou les problèmes de sécurité ;</li>
+<li>Envoyer des notifications dans l’application lorsque vous les avez autorisées ;</li>
+<li>Répondre aux demandes d’assistance, questions et retours ;</li>
+<li>Gérer les achats, l’accès premium, la publicité et les fonctionnalités de l’application ;</li>
+<li>Respecter nos obligations légales et faire valoir nos droits lorsque cela est nécessaire.</li>
+</ul>
+<h2>3. Bases légales du traitement</h2>
+<p>Lorsque la loi applicable exige une base légale, nous traitons les informations personnelles sur la base d’un ou plusieurs des fondements suivants :</p>
+<ul>
+<li>Votre consentement, par exemple lorsque vous autorisez les notifications ou accordez des permissions sur votre appareil ;</li>
+<li>Nos intérêts légitimes, notamment l’amélioration de Donniya, la sécurisation de l’application et la compréhension des tendances d’utilisation ;</li>
+<li>La nécessité contractuelle, lorsque le traitement est nécessaire pour fournir des fonctionnalités de l’application ou gérer des achats ;</li>
+<li>Les obligations légales, lorsque nous devons respecter des lois applicables ou des demandes légales ;</li>
+<li>Les intérêts vitaux, lorsque le traitement est nécessaire pour protéger la sécurité d’une personne.</li>
+</ul>
+<h2>4. Partage des informations</h2>
+<p>Nous ne vendons pas vos informations personnelles. Nous pouvons partager des informations limitées avec des prestataires de confiance qui nous aident à exploiter Donniya, notamment des prestataires d’analyse, de rapports de plantage, de publicité, d’hébergement, de traitement des paiements, de notifications et d’assistance client.</p>
+<p>Ces prestataires ne peuvent traiter les informations que dans la mesure nécessaire pour nous fournir leurs services et doivent protéger ces informations conformément à leurs propres obligations de confidentialité et de sécurité.</p>
+<p>Nous pouvons également partager des informations si la loi l’exige, pour protéger nos droits, prévenir la fraude ou les problèmes de sécurité, ou dans le cadre d’une opération commerciale telle qu’une fusion, une acquisition ou une vente d’actifs.</p>
+<h2>5. Services tiers, liens et publicité</h2>
+<p>Donniya peut contenir des liens, publicités ou intégrations provenant de services tiers. Ces tiers peuvent collecter ou traiter des informations conformément à leurs propres politiques de confidentialité. Nous ne sommes pas responsables des pratiques de confidentialité, du contenu ou de la sécurité des sites web, applications ou services tiers.</p>
+<p>Les partenaires publicitaires et d’analyse peuvent utiliser des cookies, identifiants, pixels, SDK ou technologies similaires pour mesurer les performances de l’application, afficher des publicités, prévenir les abus et comprendre comment les utilisateurs interagissent avec l’application.</p>
+<h2>6. Services API Google</h2>
+<p>Si Donniya utilise des informations reçues via les API Google, notre utilisation de ces informations respectera la Politique relative aux données utilisateur des services API Google, y compris les exigences d’utilisation limitée.</p>
+<h2>7. Conservation des données</h2>
+<p>Nous conservons les informations personnelles uniquement aussi longtemps que nécessaire pour les finalités décrites dans la présente Politique de confidentialité, sauf si une période de conservation plus longue est exigée ou autorisée par la loi.</p>
+<p>Lorsque nous n’avons plus besoin des informations personnelles, nous les supprimons, les anonymisons ou les conservons de manière sécurisée jusqu’à ce que leur suppression soit possible.</p>
+<h2>8. Sécurité</h2>
+<p>Nous utilisons des mesures techniques et organisationnelles raisonnables pour protéger les informations. Toutefois, aucune méthode de transmission ou de stockage électronique n’est totalement sécurisée, et nous ne pouvons pas garantir une sécurité absolue.</p>
+<h2>9. Vos droits en matière de confidentialité</h2>
+<p>Selon votre lieu de résidence et la loi applicable, vous pouvez avoir le droit de demander l’accès à vos informations personnelles, leur correction, leur suppression ou une copie de celles-ci. Vous pouvez également avoir le droit de retirer votre consentement ou de vous opposer à certains traitements.</p>
+<p>Pour exercer vos droits, contactez-nous à l’aide des coordonnées ci-dessous. Nous pouvons avoir besoin de vérifier votre identité avant de répondre à votre demande.</p>
+<h2>10. Signaux « Do Not Track »</h2>
+<p>Certains navigateurs et systèmes mobiles proposent des signaux « Do Not Track ». Comme il n’existe pas de norme uniforme dans l’industrie pour répondre à ces signaux, nous n’y répondons pas actuellement.</p>
+<h2>11. Modifications de cette Politique de confidentialité</h2>
+<p>Nous pouvons mettre à jour cette Politique de confidentialité de temps à autre. La version mise à jour sera indiquée par une date de révision en haut de la politique. Nous vous encourageons à consulter cette page régulièrement.</p>
+<h2>12. Nous contacter</h2>
+<p>Si vous avez des questions ou des commentaires concernant cette Politique de confidentialité, vous pouvez nous contacter à :</p>
+<p>A-Recreations
+Sebeninkoro près de la MINUSMA
+Bamako, Mali
+Email : arecreations@donniya.in</p>
+      <p><a class="top-link" href="#top">Retour en haut</a></p>
+    </section>
   </main>
+  <footer>© A-Recreations — Donniya</footer>
 </body>
 </html>
