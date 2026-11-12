@@ -86,10 +86,12 @@
 
   // Supabase Edge Function that serves this page's data.
   var API = 'https://dglrnknrmfalqvrlamxd.supabase.co/functions/v1/support-dashboard';
-  // Same grants the app gives automatically (LegacyMigrationService._grants).
+  // Old subscriptions are no longer sold. These are only the values the app
+  // itself gives when it converts one (LegacyMigrationService._grants), shown
+  // when converting an old subscription the app could not read.
   var LEGACY_PRESETS = [
-    { label: '1 month plan: 8 500 Cauris + 30 days', cauris: 8500, days: 30 },
-    { label: '3 month plan: 17 000 Cauris + 60 days', cauris: 17000, days: 60 }
+    { label: 'Old 1-month plan: 8 500 Cauris + 30 days', cauris: 8500, days: 30 },
+    { label: 'Old 3-month plan: 17 000 Cauris + 60 days', cauris: 17000, days: 60 }
   ];
 
   var key = new URLSearchParams(location.hash.slice(1)).get('key') || '';
@@ -310,7 +312,7 @@
       reason.value = 'Old subscription ' + (attrs.legacy_product_id || '') + ' converted by support';
     }
 
-    LEGACY_PRESETS.forEach(function (p) {
+    (legacy ? LEGACY_PRESETS : []).forEach(function (p) {
       var b = el('button', { type: 'button', text: p.label });
       b.addEventListener('click', function () { cauris.value = p.cauris; days.value = p.days; });
       node.querySelector('#presets').appendChild(b);
