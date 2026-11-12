@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Dɔnniya learner</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #fff; --text: #1d2330; --muted: #667085;
+    --line: #e4e7ec; --accent: #1f7a6d; --warn-bg: #fff4e5; --warn: #9a5b00;
+    --bad: #b42318; --good: #067647;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 12px; background: var(--bg); color: var(--text);
+    font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 8px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .warn { background: var(--warn-bg); border-color: #f5c27a; }
+  .warn h2 { color: var(--warn); }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 10px; margin: 0; }
+  dt { color: var(--muted); }
+  dd { margin: 0; word-break: break-all; }
+  .big { font-size: 22px; font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { text-align: left; padding: 4px 4px; border-top: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; border-top: 0; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pos { color: var(--good); } .neg { color: var(--bad); }
+  .muted { color: var(--muted); }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  input, textarea { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; width: 100%; }
+  label { display: block; color: var(--muted); margin: 6px 0 2px; }
+  button { font: inherit; border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.danger { background: var(--bad); color: #fff; border-color: var(--bad); }
+  button:disabled { opacity: .5; cursor: default; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .msg { margin-top: 8px; }
+  .msg.err { color: var(--bad); } .msg.ok { color: var(--good); }
+  .tag { display: inline-block; padding: 1px 6px; border-radius: 99px; background: #eef2f6; font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="setup" class="card warn" hidden>
+  <h2>Setup needed</h2>
+  <p>This page needs the support key in its address, like
+  <code>…/support/dashboard/#key=YOUR_SUPPORT_DASHBOARD_KEY</code>.
+  Set it as the Dashboard App URL in Chatwoot.</p>
+</div>
+
+<div class="card">
+  <div class="row">
+    <input id="search" placeholder="Support ID (8 characters) or user ID" style="flex:1">
+    <button id="searchBtn">Look up</button>
+  </div>
+  <div id="status" class="msg muted">Waiting for the Chatwoot conversation…</div>
+</div>
+
+<div id="app"></div>
+
+<template id="grantTpl">
+  <div class="card">
+    <h2>Credit this learner</h2>
+    <div class="row" id="presets"></div>
+    <div class="two">
+      <div><label for="gCauris">Cauris</label><input id="gCauris" type="number" min="0" max="50000" step="1" value="0"></div>
+      <div><label for="gDays">Ad-free days</label><input id="gDays" type="number" min="0" max="365" step="1" value="0"></div>
+    </div>
+    <label for="gReason">Reason (kept in the audit log)</label>
+    <textarea id="gReason" rows="2"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button id="gBtn" class="primary">Credit</button>
+      <span id="gMode" class="muted"></span>
+    </div>
+    <div id="gMsg" class="msg"></div>
+  </div>
+</template>
+
+<script>
+(function () {
+  'use strict';
+
+  // Supabase Edge Function that serves this page's data.
+  var API = 'https://dglrnknrmfalqvrlamxd.supabase.co/functions/v1/support-dashboard';
+  // Same grants the app gives automatically (LegacyMigrationService._grants).
+  var LEGACY_PRESETS = [
+    { label: '1 month plan: 8 500 Cauris + 30 days', cauris: 8500, days: 30 },
+    { label: '3 month plan: 17 000 Cauris + 60 days', cauris: 17000, days: 60 }
+  ];
+
+  var key = new URLSearchParams(location.hash.slice(1)).get('key') || '';
+  var context = { contact: null, conversation: null, agent: null };
+  var current = null; // { overview, attrs }
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  function el(tag, attrs, children) {
+    var node = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) {
+      if (k === 'class') node.className = attrs[k];
+      else if (k === 'text') node.textContent = attrs[k];
+      else node.setAttribute(k, attrs[k]);
+    });
+    (children || []).forEach(function (c) {
+      if (c == null) return;
+      node.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    });
+    return node;
+  }
+
+  function fmtDate(value) {
+    if (!value) return '—';
+    var d = new Date(value);
+    return isNaN(d) ? String(value) : d.toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
+  }
+  function fmtNum(n) { return Number(n || 0).toLocaleString('fr-FR'); }
+
+  function status(text, kind) {
+    var s = $('status');
+    s.textContent = text;
+    s.className = 'msg ' + (kind || 'muted');
+  }
+
+  function api(body) {
+    return fetch(API, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-support-key': key },
+      body: JSON.stringify(body)
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (data) {
+        if (!res.ok) {
+          var message = (data.error && data.error.message) || ('HTTP ' + res.status);
+          throw new Error(message);
+        }
+        return data;
+      });
+    });
+  }
+
+  function definitionList(rows) {
+    var dl = el('dl');
+    rows.forEach(function (r) {
+      if (r[1] === undefined || r[1] === null || r[1] === '') return;
+      dl.appendChild(el('dt', { text: r[0] }));
+      dl.appendChild(el('dd', {}, [r[1] instanceof Node ? r[1] : String(r[1])]));
+    });
+    return dl;
+  }
+
+  // ---- Chatwoot context -------------------------------------------------
+  window.addEventListener('message', function (event) {
+    var payload;
+    try { payload = typeof event.data === 'string' ? JSON.parse(event.data) : event.data; }
+    catch (e) { return; }
+    if (!payload || payload.event !== 'appContext' || !payload.data) return;
+    context.contact = payload.data.contact || null;
+    context.conversation = payload.data.conversation || null;
+    context.agent = payload.data.currentAgent || null;
+    var attrs = (context.contact && context.contact.custom_attributes) || {};
+    if (attrs.account_user_id) {
+      $('search').value = attrs.account_user_id;
+    } else if (attrs.support_id) {
+      $('search').value = attrs.support_id;
+    }
+    load(attrs);
+  });
+
+  function requestContext() {
+    try { window.parent.postMessage('chatwoot-dashboard-app:fetch-info', '*'); } catch (e) {}
+  }
+
+  // ---- Rendering ---------------------------------------------------------
+  function renderDevice(attrs) {
+    if (!attrs || !Object.keys(attrs).length) return null;
+    return el('div', { class: 'card' }, [
+      el('h2', { text: 'From the app (this device)' }),
+      definitionList([
+        ['Support ID', attrs.support_id],
+        ['Account', attrs.account_type],
+        ['Name', attrs.account_name],
+        ['Email', attrs.account_email],
+        ['App', [attrs.app_version, attrs.build_number && '(' + attrs.build_number + ')', attrs.platform]
+          .filter(Boolean).join(' ')],
+        ['Language', attrs.app_language],
+        ['Opened from', attrs.support_source],
+        ['Wari', attrs.wari_active === 'true' ? 'Active' : attrs.wari_active === 'false' ? 'No' : undefined],
+        ['Cauris on device', attrs.cauris_balance_device !== undefined ? fmtNum(attrs.cauris_balance_device) : undefined]
+      ]),
+      attrs.last_practice_report
+        ? el('div', {}, [el('label', { text: 'Last exercise report' }),
+            el('pre', { style: 'white-space:pre-wrap;margin:0', text: attrs.last_practice_report })])
+        : null
+    ]);
+  }
+
+  function renderLegacy(attrs) {
+    if (!attrs || !attrs.legacy_status) return null;
+    if (attrs.legacy_status === 'migrated') {
+      return el('div', { class: 'card' }, [
+        el('h2', { text: 'Old subscription' }),
+        el('p', { text: 'Converted automatically by the app: ' + (attrs.legacy_product_id || '?') +
+          ' → ' + fmtNum(attrs.legacy_granted_cauris) + ' Cauris.' })
+      ]);
+    }
+    return el('div', { class: 'card warn' }, [
+      el('h2', { text: 'Old subscription not converted' }),
+      el('p', { text: 'The app found an active old subscription it does not recognise, so nothing was credited.' }),
+      definitionList([
+        ['Product', attrs.legacy_product_id],
+        ['RevenueCat user', attrs.legacy_revenuecat_user_id],
+        ['Expires', fmtDate(attrs.legacy_expires_at)]
+      ]),
+      el('p', { class: 'muted', text: 'Check the product and price in RevenueCat (Customers → search the RevenueCat user), ' +
+        'then credit it below with a matching preset.' })
+    ]);
+  }
+
+  function renderAccount(o) {
+    var u = o.user;
+    return el('div', { class: 'card' }, [
+      el('h2', { text: 'Account (server)' }),
+      definitionList([
+        ['Support ID', u.support_id],
+        ['Email', u.email],
+        ['Sign-in', u.provider],
+        ['Created', fmtDate(u.created_at)],
+        ['Last sign-in', fmtDate(u.last_sign_in_at)],
+        ['Last sync', o.synced ? fmtDate(o.last_sync_at) : 'Never synced'],
+        ['User ID', u.id]
+      ])
+    ]);
+  }
+
+  function renderWallet(o) {
+    var adFree = o.ad_free_expires_at && new Date(o.ad_free_expires_at) > new Date()
+      ? 'until ' + fmtDate(o.ad_free_expires_at) : 'No';
+    var rows = (o.wallet.recent || []).map(function (t) {
+      var amount = Number(t.amount || 0);
+      return el('tr', {}, [
+        el('td', { text: fmtDate(t.at) }),
+        el('td', { text: t.type || '' }),
+        el('td', { class: 'num ' + (amount >= 0 ? 'pos' : 'neg'), text: (amount > 0 ? '+' : '') + fmtNum(amount) })
+      ]);
+    });
+    return el('div', { class: 'card' }, [
+      el('h2', { text: 'Cauris (server)' }),
+      el('div', { class: 'big', text: fmtNum(o.wallet.balance) }),
+      el('div', { class: 'muted', text: 'Ad-free: ' + adFree }),
+      rows.length
+        ? el('table', { style: 'margin-top:8px' }, [
+            el('tr', {}, [el('th', { text: 'When' }), el('th', { text: 'What' }), el('th', { class: 'num', text: 'Cauris' })])
+          ].concat(rows))
+        : el('p', { class: 'muted', text: 'No transactions yet.' })
+    ]);
+  }
+
+  function renderPayments(o) {
+    var list = o.mobile_money_payments || [];
+    if (!list.length) return null;
+    return el('div', { class: 'card' }, [
+      el('h2', { text: 'Mobile Money payments' }),
+      el('table', {}, [
+        el('tr', {}, [el('th', { text: 'When' }), el('th', { text: 'Pack' }), el('th', { class: 'num', text: 'Paid' }), el('th', { text: 'Status' })])
+      ].concat(list.map(function (p) {
+        return el('tr', {}, [
+          el('td', { text: fmtDate(p.created_at) }),
+          el('td', { text: (p.pack_id || '') + ' · ' + (p.provider || '') }),
+          el('td', { class: 'num', text: fmtNum(p.amount) + ' ' + (p.currency || '') }),
+          el('td', {}, [el('span', { class: 'tag', text: p.credited_at ? 'credited' : (p.status || '') })])
+        ]);
+      })))
+    ]);
+  }
+
+  function renderHistory(o) {
+    var list = o.support_actions || [];
+    if (!list.length) return null;
+    return el('div', { class: 'card' }, [
+      el('h2', { text: 'Previous support credits' }),
+      el('table', {}, list.map(function (a) {
+        return el('tr', {}, [
+          el('td', { text: fmtDate(a.created_at) }),
+          el('td', { text: '+' + fmtNum(a.cauris) + ' Cauris, ' + a.ad_free_days + ' days' }),
+          el('td', { class: 'muted', text: a.reason + ' — ' + a.actor })
+        ]);
+      }))
+    ]);
+  }
+
+  function renderGrant(o, attrs) {
+    var node = $('grantTpl').content.cloneNode(true);
+    var box = node.querySelector('.card');
+    var cauris = node.querySelector('#gCauris');
+    var days = node.querySelector('#gDays');
+    var reason = node.querySelector('#gReason');
+    var btn = node.querySelector('#gBtn');
+    var mode = node.querySelector('#gMode');
+    var msg = node.querySelector('#gMsg');
+
+    var legacy = attrs && attrs.legacy_status === 'unknown_product' && attrs.legacy_transaction_id;
+    var idempotencyId = 'support-grant:' + crypto.randomUUID();
+    mode.textContent = legacy
+      ? 'Counts as the old-subscription conversion (can only happen once).'
+      : 'Goodwill credit.';
+    if (legacy) {
+      reason.value = 'Old subscription ' + (attrs.legacy_product_id || '') + ' converted by support';
+    }
+
+    LEGACY_PRESETS.forEach(function (p) {
+      var b = el('button', { type: 'button', text: p.label });
+      b.addEventListener('click', function () { cauris.value = p.cauris; days.value = p.days; });
+      node.querySelector('#presets').appendChild(b);
+    });
+
+    var armed = false;
+    btn.addEventListener('click', function () {
+      var c = parseInt(cauris.value, 10) || 0;
+      var d = parseInt(days.value, 10) || 0;
+      msg.textContent = ''; msg.className = 'msg';
+      if (c <= 0 && d <= 0) { msg.textContent = 'Enter Cauris or ad-free days.'; msg.className = 'msg err'; return; }
+      if (!reason.value.trim()) { msg.textContent = 'Write a reason.'; msg.className = 'msg err'; return; }
+      if (!armed) {
+        armed = true;
+        btn.textContent = 'Confirm: +' + fmtNum(c) + ' Cauris, ' + d + ' days';
+        btn.className = 'danger';
+        return;
+      }
+      btn.disabled = true;
+      var agent = context.agent || {};
+      api({
+        op: 'grant',
+        userId: o.user.id,
+        action: legacy ? 'legacy_subscription_conversion' : 'goodwill_grant',
+        transactionId: legacy ? attrs.legacy_transaction_id : idempotencyId,
+        cauris: c,
+        adFreeDays: d,
+        reason: reason.value.trim(),
+        actor: agent.email || agent.name || 'support',
+        conversationId: context.conversation && context.conversation.id ? String(context.conversation.id) : ''
+      }).then(function (r) {
+        msg.className = 'msg ok';
+        msg.textContent = r.alreadyApplied
+          ? 'Already credited before; nothing changed. Balance: ' + fmtNum(r.balance)
+          : 'Done. New balance: ' + fmtNum(r.balance) + '. The learner sees it after the app syncs (reopen the app).';
+        idempotencyId = 'support-grant:' + crypto.randomUUID();
+        setTimeout(function () { load(attrs); }, 1200);
+      }).catch(function (e) {
+        msg.className = 'msg err';
+        msg.textContent = e.message;
+        btn.disabled = false;
+      }).then(function () {
+        armed = false;
+        btn.textContent = 'Credit';
+        btn.className = 'primary';
+      });
+    });
+    return box;
+  }
+
+  // ---- Loading -----------------------------------------------------------
+  var loading = 0;
+  function load(attrs) {
+    if (!key) { $('setup').hidden = false; status('Missing support key.', 'err'); return; }
+    var value = $('search').value.trim();
+    var app = $('app');
+    app.textContent = '';
+    [renderLegacy(attrs), renderDevice(attrs)].forEach(function (n) { if (n) app.appendChild(n); });
+
+    if (!value) {
+      status(attrs && attrs.support_id ? '' : 'No Dɔnniya details on this contact yet (older app version?). Search by support ID.');
+      return;
+    }
+    var isUuid = /^[0-9a-f-]{36}$/i.test(value);
+    var request = isUuid ? { op: 'lookup', userId: value } : { op: 'lookup', supportId: value.toUpperCase() };
+    var mine = ++loading;
+    status('Loading…');
+    api(request).then(function (o) {
+      if (mine !== loading) return;
+      if (o.matches && o.matches.length) {
+        status('Several accounts share this support ID. Pick one:', 'err');
+        o.matches.forEach(function (m) {
+          var b = el('button', { type: 'button', text: (m.email || m.user_id) + ' · ' + fmtDate(m.created_at) });
+          b.addEventListener('click', function () { $('search').value = m.user_id; load(attrs); });
+          app.insertBefore(b, app.firstChild);
+        });
+        return;
+      }
+      if (!o.found) {
+        var guest = attrs && attrs.account_type === 'guest';
+        status(guest
+          ? 'This learner uses the app as a guest, so there is no account to credit. Ask them to sign in (Profile), then reopen the chat.'
+          : 'No account found for ' + value + '.', 'err');
+        return;
+      }
+      status('');
+      current = { overview: o, attrs: attrs };
+      [renderAccount(o), renderWallet(o), renderGrant(o, attrs), renderPayments(o), renderHistory(o)]
+        .forEach(function (n) { if (n) app.appendChild(n); });
+    }).catch(function (e) {
+      if (mine !== loading) return;
+      status(e.message, 'err');
+    });
+  }
+
+  $('searchBtn').addEventListener('click', function () {
+    load(current ? current.attrs : ((context.contact && context.contact.custom_attributes) || {}));
+  });
+  $('search').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('searchBtn').click(); });
+
+  if (!key) { $('setup').hidden = false; status('Missing support key.', 'err'); }
+  requestContext();
+  // Chatwoot only answers when it is the parent; outside Chatwoot, search by hand.
+  setTimeout(function () {
+    if (!context.contact) status(window.parent === window
+      ? 'Not inside Chatwoot: search by support ID.'
+      : 'Waiting for Chatwoot… open a conversation.');
+  }, 2500);
+})();
+</script>
+</body>
+</html>
