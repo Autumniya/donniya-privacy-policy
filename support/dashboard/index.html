@@ -32,7 +32,7 @@
   .pos { color: var(--good); } .neg { color: var(--bad); }
   .muted { color: var(--muted); }
   .row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-  input, textarea { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; width: 100%; }
+  input, textarea, select { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; width: 100%; }
   label { display: block; color: var(--muted); margin: 6px 0 2px; }
   button { font: inherit; border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
   button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
@@ -62,36 +62,19 @@
 
 <div id="app"></div>
 
-<template id="grantTpl">
-  <div class="card">
-    <h2>Credit this learner</h2>
-    <div class="row" id="presets"></div>
-    <div class="two">
-      <div><label for="gCauris">Cauris</label><input id="gCauris" type="number" min="0" max="50000" step="1" value="0"></div>
-      <div><label for="gDays">Ad-free days</label><input id="gDays" type="number" min="0" max="365" step="1" value="0"></div>
-    </div>
-    <label for="gReason">Reason (kept in the audit log)</label>
-    <textarea id="gReason" rows="2"></textarea>
-    <div class="row" style="margin-top:8px">
-      <button id="gBtn" class="primary">Credit</button>
-      <span id="gMode" class="muted"></span>
-    </div>
-    <div id="gMsg" class="msg"></div>
-  </div>
-</template>
-
 <script>
 (function () {
   'use strict';
 
   // Supabase Edge Function that serves this page's data.
   var API = 'https://dglrnknrmfalqvrlamxd.supabase.co/functions/v1/support-dashboard';
-  // Old subscriptions are no longer sold. These are only the values the app
-  // itself gives when it converts one (LegacyMigrationService._grants), shown
-  // when converting an old subscription the app could not read.
-  var LEGACY_PRESETS = [
-    { label: 'Old 1-month plan: 8 500 Cauris + 30 days', cauris: 8500, days: 30 },
-    { label: 'Old 3-month plan: 17 000 Cauris + 60 days', cauris: 17000, days: 60 }
+  // Shop names of the current packs (cauris_pack_catalog ids).
+  var PACK_NAMES = {
+    petit_sac: 'Corde', bourse: 'Calebasse', coffret: 'Sac', tresor: 'Panier', grand_tresor: 'Jarre'
+  };
+  // Current Wari plan lengths (RevenueCat promotional durations).
+  var WARI_DURATIONS = [
+    ['monthly', '1 month'], ['three_month', '3 months'], ['six_month', '6 months'], ['yearly', '1 year']
   ];
 
   var key = new URLSearchParams(location.hash.slice(1)).get('key') || '';
@@ -200,24 +183,15 @@
   }
 
   function renderLegacy(attrs) {
-    if (!attrs || !attrs.legacy_status) return null;
-    if (attrs.legacy_status === 'migrated') {
-      return el('div', { class: 'card' }, [
-        el('h2', { text: 'Old subscription' }),
-        el('p', { text: 'Converted automatically by the app: ' + (attrs.legacy_product_id || '?') +
-          ' → ' + fmtNum(attrs.legacy_granted_cauris) + ' Cauris.' })
-      ]);
-    }
+    if (!attrs || attrs.legacy_status !== 'unknown_product') return null;
     return el('div', { class: 'card warn' }, [
-      el('h2', { text: 'Old subscription not converted' }),
-      el('p', { text: 'The app found an active old subscription it does not recognise, so nothing was credited.' }),
+      el('h2', { text: 'Old subscription still active' }),
+      el('p', { text: 'Old plans are no longer sold or credited. If the store still charges the learner, ' +
+        'tell them to cancel it in Google Play / App Store → Subscriptions, and suggest Wari in the Shop.' }),
       definitionList([
         ['Product', attrs.legacy_product_id],
-        ['RevenueCat user', attrs.legacy_revenuecat_user_id],
-        ['Expires', fmtDate(attrs.legacy_expires_at)]
-      ]),
-      el('p', { class: 'muted', text: 'Check the product and price in RevenueCat (Customers → search the RevenueCat user), ' +
-        'then credit it below with a matching preset.' })
+        ['Ends', fmtDate(attrs.legacy_expires_at)]
+      ])
     ]);
   }
 
@@ -238,8 +212,6 @@
   }
 
   function renderWallet(o) {
-    var adFree = o.ad_free_expires_at && new Date(o.ad_free_expires_at) > new Date()
-      ? 'until ' + fmtDate(o.ad_free_expires_at) : 'No';
     var rows = (o.wallet.recent || []).map(function (t) {
       var amount = Number(t.amount || 0);
       return el('tr', {}, [
@@ -251,7 +223,6 @@
     return el('div', { class: 'card' }, [
       el('h2', { text: 'Cauris (server)' }),
       el('div', { class: 'big', text: fmtNum(o.wallet.balance) }),
-      el('div', { class: 'muted', text: 'Ad-free: ' + adFree }),
       rows.length
         ? el('table', { style: 'margin-top:8px' }, [
             el('tr', {}, [el('th', { text: 'When' }), el('th', { text: 'What' }), el('th', { class: 'num', text: 'Cauris' })])
@@ -260,107 +231,185 @@
     ]);
   }
 
-  function renderPayments(o) {
+  // Two clicks for every credit: the first arms the button, the second sends.
+  function confirmButton(label, confirmLabel, run) {
+    var btn = el('button', { type: 'button', class: 'primary', text: label });
+    var armed = false;
+    btn.addEventListener('click', function () {
+      if (btn.disabled) return;
+      if (!armed) {
+        var problem = run.check ? run.check() : '';
+        if (problem) { run.say(problem, 'err'); return; }
+        armed = true; btn.textContent = confirmLabel(); btn.className = 'danger'; return;
+      }
+      btn.disabled = true;
+      run.go().then(function (message) { run.say(message, 'ok'); })
+        .catch(function (e) { run.say(e.message, 'err'); btn.disabled = false; })
+        .then(function () { armed = false; btn.textContent = label; btn.className = 'primary'; });
+    });
+    return btn;
+  }
+
+  function sayIn(node) {
+    return function (text, kind) { node.textContent = text; node.className = 'msg ' + (kind || ''); };
+  }
+
+  function actor() {
+    var agent = context.agent || {};
+    return agent.email || agent.name || 'support';
+  }
+  function conversationId() {
+    return context.conversation && context.conversation.id ? String(context.conversation.id) : '';
+  }
+  function reload(attrs) { setTimeout(function () { load(attrs); }, 1500); }
+
+  function renderPayments(o, attrs) {
     var list = o.mobile_money_payments || [];
     if (!list.length) return null;
+    var reason = el('input', { placeholder: 'Reason, e.g. “Paid, confirmed in the pawaPay dashboard”' });
+    var msg = el('div', { class: 'msg' });
+    var say = sayIn(msg);
+    var hasOpen = false;
+    var rows = list.map(function (p) {
+      var action = null;
+      if (!p.credited_at) {
+        hasOpen = true;
+        action = confirmButton('Credit', function () { return 'Confirm +' + fmtNum(p.cauris) + ' Cauris'; }, {
+          say: say,
+          check: function () { return reason.value.trim().length < 12 ? 'Write a reason (12+ characters) first.' : ''; },
+          go: function () {
+            return api({ op: 'credit_mobile_money', userId: o.user.id, paymentId: p.id,
+              reason: reason.value.trim(), actor: actor(), conversationId: conversationId() })
+              .then(function (r) {
+                reload(attrs);
+                return r.alreadyApplied ? 'This payment was already credited.'
+                  : 'Credited. New balance: ' + fmtNum(r.balance) + '.';
+              });
+          }
+        });
+      }
+      return el('tr', {}, [
+        el('td', { text: fmtDate(p.created_at) }),
+        el('td', { text: (PACK_NAMES[p.pack_id] || p.pack_id || '') + ' · ' + (p.provider || '') }),
+        el('td', { class: 'num', text: fmtNum(p.amount) + ' ' + (p.currency || '') }),
+        el('td', {}, [el('span', { class: 'tag', text: p.credited_at ? 'credited' : (p.status || '') })]),
+        el('td', {}, [action])
+      ]);
+    });
     return el('div', { class: 'card' }, [
       el('h2', { text: 'Mobile Money payments' }),
       el('table', {}, [
-        el('tr', {}, [el('th', { text: 'When' }), el('th', { text: 'Pack' }), el('th', { class: 'num', text: 'Paid' }), el('th', { text: 'Status' })])
-      ].concat(list.map(function (p) {
-        return el('tr', {}, [
-          el('td', { text: fmtDate(p.created_at) }),
-          el('td', { text: (p.pack_id || '') + ' · ' + (p.provider || '') }),
-          el('td', { class: 'num', text: fmtNum(p.amount) + ' ' + (p.currency || '') }),
-          el('td', {}, [el('span', { class: 'tag', text: p.credited_at ? 'credited' : (p.status || '') })])
-        ]);
-      })))
+        el('tr', {}, [el('th', { text: 'When' }), el('th', { text: 'Pack' }), el('th', { class: 'num', text: 'Paid' }),
+          el('th', { text: 'Status' }), el('th', {})])
+      ].concat(rows)),
+      hasOpen ? el('p', { class: 'muted', text: 'Only credit a payment after checking it succeeded in the Orange Money or ' +
+        'pawaPay dashboard. The learner gets that payment\'s own pack.' }) : null,
+      hasOpen ? reason : null,
+      msg
+    ]);
+  }
+
+  function renderStorePack(o, attrs) {
+    var packs = o.pack_catalog || [];
+    var select = el('select', {}, packs.map(function (p) {
+      return el('option', { value: p.pack_id,
+        text: (PACK_NAMES[p.pack_id] || p.pack_id) + ' · ' + fmtNum(p.cauris) + ' Cauris' });
+    }));
+    var receipt = el('input', { placeholder: 'Store transaction ID (GPA.… or App Store ID)' });
+    var reason = el('input', { placeholder: 'Reason, e.g. “Charged by Google Play, no Cauris”' });
+    var msg = el('div', { class: 'msg' });
+    var say = sayIn(msg);
+    var btn = confirmButton('Credit pack', function () {
+      var p = packs.filter(function (x) { return x.pack_id === select.value; })[0] || {};
+      return 'Confirm +' + fmtNum(p.cauris) + ' Cauris';
+    }, {
+      say: say,
+      check: function () {
+        if (!receipt.value.trim()) return 'Paste the store transaction ID from RevenueCat first.';
+        if (reason.value.trim().length < 12) return 'Write a reason (12+ characters).';
+        return '';
+      },
+      go: function () {
+        return api({ op: 'credit_store_pack', userId: o.user.id, packId: select.value,
+          storeTransactionId: receipt.value.trim(), reason: reason.value.trim(),
+          actor: actor(), conversationId: conversationId() })
+          .then(function (r) {
+            reload(attrs);
+            return r.alreadyApplied ? 'This purchase was already credited; nothing changed.'
+              : 'Credited ' + fmtNum(r.cauris) + ' Cauris. New balance: ' + fmtNum(r.balance) + '.';
+          });
+      }
+    });
+    return el('div', { class: 'card' }, [
+      el('h2', { text: 'Store pack not delivered' }),
+      el('p', { class: 'muted', text: 'Google Play / App Store charged the learner but no Cauris arrived. Find the purchase ' +
+        'in RevenueCat (Customers → this user ID) and copy its store transaction ID.' }),
+      el('label', { text: 'Pack bought' }), select,
+      el('label', { text: 'Store transaction ID' }), receipt,
+      el('label', { text: 'Reason (kept in the audit log)' }), reason,
+      el('div', { class: 'row', style: 'margin-top:8px' }, [btn]),
+      msg
+    ]);
+  }
+
+  function renderWari(o, attrs) {
+    var select = el('select', {}, WARI_DURATIONS.map(function (d) {
+      return el('option', { value: d[0], text: d[1] });
+    }));
+    var reason = el('input', { placeholder: 'Reason, e.g. “Paid Wari, store never activated it”' });
+    var msg = el('div', { class: 'msg' });
+    var say = sayIn(msg);
+    var grantId = 'support-grant:' + crypto.randomUUID();
+    var btn = confirmButton('Give Wari', function () {
+      return 'Confirm Wari for ' + select.options[select.selectedIndex].text;
+    }, {
+      say: say,
+      check: function () { return reason.value.trim().length < 12 ? 'Write a reason (12+ characters).' : ''; },
+      go: function () {
+        return api({ op: 'grant_wari', userId: o.user.id, duration: select.value, grantId: grantId,
+          reason: reason.value.trim(), actor: actor(), conversationId: conversationId() })
+          .then(function (r) {
+            grantId = 'support-grant:' + crypto.randomUUID();
+            reload(attrs);
+            return r.alreadyApplied ? 'Already given; nothing changed.'
+              : 'Wari active' + (r.wariExpiresAt ? ' until ' + fmtDate(r.wariExpiresAt) : '') +
+                '. The learner sees it after reopening the app.';
+          });
+      }
+    });
+    var status = attrs && attrs.wari_active === 'true' ? 'Wari is active on their phone.'
+      : attrs && attrs.wari_active === 'false' ? 'Wari is not active on their phone.' : '';
+    return el('div', { class: 'card' }, [
+      el('h2', { text: 'Wari' }),
+      el('p', { class: 'muted', text: (status ? status + ' ' : '') +
+        'Use only when Wari was paid but not activated, after checking RevenueCat. Sanu will be added when it launches.' }),
+      el('div', { class: 'two' }, [
+        el('div', {}, [el('label', { text: 'Length' }), select]),
+        el('div', {}, [el('label', { text: 'Reason (kept in the audit log)' }), reason])
+      ]),
+      el('div', { class: 'row', style: 'margin-top:8px' }, [btn]),
+      msg
     ]);
   }
 
   function renderHistory(o) {
     var list = o.support_actions || [];
     if (!list.length) return null;
+    var label = function (a) {
+      if (a.action === 'entitlement_grant') return 'Wari ' + (a.duration || '') + (a.status === 'pending' ? ' (pending)' : '');
+      if (a.action === 'mobile_money_payment_credit') return 'Mobile Money +' + fmtNum(a.cauris) + ' Cauris';
+      return (PACK_NAMES[a.pack_id] || a.pack_id || 'Pack') + ' +' + fmtNum(a.cauris) + ' Cauris';
+    };
     return el('div', { class: 'card' }, [
       el('h2', { text: 'Previous support credits' }),
       el('table', {}, list.map(function (a) {
         return el('tr', {}, [
           el('td', { text: fmtDate(a.created_at) }),
-          el('td', { text: '+' + fmtNum(a.cauris) + ' Cauris, ' + a.ad_free_days + ' days' }),
+          el('td', { text: label(a) }),
           el('td', { class: 'muted', text: a.reason + ' — ' + a.actor })
         ]);
       }))
     ]);
-  }
-
-  function renderGrant(o, attrs) {
-    var node = $('grantTpl').content.cloneNode(true);
-    var box = node.querySelector('.card');
-    var cauris = node.querySelector('#gCauris');
-    var days = node.querySelector('#gDays');
-    var reason = node.querySelector('#gReason');
-    var btn = node.querySelector('#gBtn');
-    var mode = node.querySelector('#gMode');
-    var msg = node.querySelector('#gMsg');
-
-    var legacy = attrs && attrs.legacy_status === 'unknown_product' && attrs.legacy_transaction_id;
-    var idempotencyId = 'support-grant:' + crypto.randomUUID();
-    mode.textContent = legacy
-      ? 'Counts as the old-subscription conversion (can only happen once).'
-      : 'Goodwill credit.';
-    if (legacy) {
-      reason.value = 'Old subscription ' + (attrs.legacy_product_id || '') + ' converted by support';
-    }
-
-    (legacy ? LEGACY_PRESETS : []).forEach(function (p) {
-      var b = el('button', { type: 'button', text: p.label });
-      b.addEventListener('click', function () { cauris.value = p.cauris; days.value = p.days; });
-      node.querySelector('#presets').appendChild(b);
-    });
-
-    var armed = false;
-    btn.addEventListener('click', function () {
-      var c = parseInt(cauris.value, 10) || 0;
-      var d = parseInt(days.value, 10) || 0;
-      msg.textContent = ''; msg.className = 'msg';
-      if (c <= 0 && d <= 0) { msg.textContent = 'Enter Cauris or ad-free days.'; msg.className = 'msg err'; return; }
-      if (!reason.value.trim()) { msg.textContent = 'Write a reason.'; msg.className = 'msg err'; return; }
-      if (!armed) {
-        armed = true;
-        btn.textContent = 'Confirm: +' + fmtNum(c) + ' Cauris, ' + d + ' days';
-        btn.className = 'danger';
-        return;
-      }
-      btn.disabled = true;
-      var agent = context.agent || {};
-      api({
-        op: 'grant',
-        userId: o.user.id,
-        action: legacy ? 'legacy_subscription_conversion' : 'goodwill_grant',
-        transactionId: legacy ? attrs.legacy_transaction_id : idempotencyId,
-        cauris: c,
-        adFreeDays: d,
-        reason: reason.value.trim(),
-        actor: agent.email || agent.name || 'support',
-        conversationId: context.conversation && context.conversation.id ? String(context.conversation.id) : ''
-      }).then(function (r) {
-        msg.className = 'msg ok';
-        msg.textContent = r.alreadyApplied
-          ? 'Already credited before; nothing changed. Balance: ' + fmtNum(r.balance)
-          : 'Done. New balance: ' + fmtNum(r.balance) + '. The learner sees it after the app syncs (reopen the app).';
-        idempotencyId = 'support-grant:' + crypto.randomUUID();
-        setTimeout(function () { load(attrs); }, 1200);
-      }).catch(function (e) {
-        msg.className = 'msg err';
-        msg.textContent = e.message;
-        btn.disabled = false;
-      }).then(function () {
-        armed = false;
-        btn.textContent = 'Credit';
-        btn.className = 'primary';
-      });
-    });
-    return box;
   }
 
   // ---- Loading -----------------------------------------------------------
@@ -400,7 +449,8 @@
       }
       status('');
       current = { overview: o, attrs: attrs };
-      [renderAccount(o), renderWallet(o), renderGrant(o, attrs), renderPayments(o), renderHistory(o)]
+      [renderAccount(o), renderWallet(o), renderPayments(o, attrs), renderStorePack(o, attrs),
+        renderWari(o, attrs), renderHistory(o)]
         .forEach(function (n) { if (n) app.appendChild(n); });
     }).catch(function (e) {
       if (mine !== loading) return;
